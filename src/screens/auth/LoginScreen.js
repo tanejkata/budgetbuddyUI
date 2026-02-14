@@ -1,6 +1,6 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-
+import { colors } from "../../constants/colors";
 export default function LoginScreen() {
   return (
     <View style={styles.container}>
@@ -94,4 +94,3 @@ const styles = StyleSheet.create({
 
   footer: { marginTop: 18, textAlign: "center", color: colors.subtext, fontSize: 12 },
 });
-
