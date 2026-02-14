@@ -1,60 +1,31 @@
 import React from "react";
-import { View, Text, TextInput, StyleSheet } from "react-native";
-import { colors } from "../constants/colors";
+import { View, TextInput, StyleSheet } from "react-native";
+import { COLORS } from "../constants/colors";
 
-export default function CustomInput({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  secureTextEntry = false,
-  keyboardType = "default",
-  autoCapitalize = "none",
-  error,
-}) {
+export default function CustomInput(props) {
   return (
-    <View style={styles.wrapper}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
-
+    <View style={styles.container}>
       <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={colors.subtext}
-        secureTextEntry={secureTextEntry}
-        keyboardType={keyboardType}
-        autoCapitalize={autoCapitalize}
-        style={[styles.input, error ? styles.inputError : null]}
+        {...props}
+        style={styles.input}
+        placeholderTextColor="#F2A8CD"
       />
-
-      {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginBottom: 14 },
-  label: {
-    marginBottom: 6,
-    color: colors.text,
-    fontSize: 13,
-    fontWeight: "600",
+  container: {
+    backgroundColor: COLORS.inputBg,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 16,
   },
   input: {
-    height: 48,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    backgroundColor: colors.inputBg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    color: colors.text,
-  },
-  inputError: {
-    borderColor: colors.danger,
-  },
-  error: {
-    marginTop: 6,
-    color: colors.danger,
-    fontSize: 12,
+    fontSize: 15,
+    color: COLORS.darkText,
   },
 });

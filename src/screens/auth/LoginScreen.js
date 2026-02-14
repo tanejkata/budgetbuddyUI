@@ -1,118 +1,79 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { colors } from "../../constants/colors";
+import { COLORS } from "../../constants/colors";
+import CustomInput from "../../components/CustomInput";
+import CustomButton from "../../components/CustomButton";
 import { loginUser } from "../../services/authService";
-import LoadingScreen from "../common/LoadingScreen";
+import { useAuth } from "../../hooks/useAuth";
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }) {
+  const { setUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     try {
-      setLoading(true);
       const data = await loginUser(email, password);
-      console.log(data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
+      setUser(data);
+    } catch (err) {
+      Alert.alert("Login Failed");
     }
   };
 
-  if (loading) {
-    return <LoadingScreen message="Logging you in..." />;
-  }
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome Back!</Text>
-      <Text style={styles.subtitle}>So happy to see you again ♡</Text>
+    <LinearGradient
+      colors={[COLORS.bgTop, COLORS.bgBottom]}
+      style={styles.container}
+    >
+      <Text style={styles.title}>Welcome</Text>
+      <Text style={[styles.title, styles.mb30]}>Back !</Text>
+      <Text style={[styles.subtext, styles.mb30]}>
+        so happy to see you again{" "}
+      </Text>
 
-      <TextInput
+      <CustomInput
         placeholder="Email"
-        autoCapitalize="none"
-        placeholderTextColor="#d98cb3"
-        style={styles.input}
         value={email}
         onChangeText={setEmail}
+        autoCapitalize="none"
       />
 
-      <TextInput
+      <CustomInput
         placeholder="Password"
-        placeholderTextColor="#d98cb3"
-        secureTextEntry
-        style={styles.input}
         value={password}
         onChangeText={setPassword}
+        secureTextEntry
       />
 
-      <TouchableOpacity onPress={handleLogin}>
-        <LinearGradient colors={["#ff4da6", "#ff66b3"]} style={styles.button}>
-          <Text style={styles.buttonText}>Log In</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+      <CustomButton title="Log In" onPress={handleLogin} />
 
-      <Text style={styles.signupText}>
-        Don't have an account? <Text style={styles.signupLink}>Sign Up</Text>
+      <Text style={styles.link} onPress={() => navigation.navigate("Register")}>
+        Don’t have an account? Sign Up
       </Text>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffe6f0",
-    padding: 25,
-    justifyContent: "center",
-  },
+  container: { flex: 1, padding: 24, justifyContent: "center" },
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#ff3399",
+    fontSize: 50,
+    color: COLORS.primary,
     textAlign: "center",
-    marginBottom: 10,
   },
-  subtitle: {
-    textAlign: "center",
-    color: "#cc6699",
+  mb30: {
     marginBottom: 30,
   },
-  input: {
-    backgroundColor: "#fff",
-    borderRadius: 25,
-    padding: 15,
-    marginBottom: 20,
-    paddingHorizontal: 20,
-  },
-  button: {
-    borderRadius: 30,
-    paddingVertical: 15,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  signupText: {
-    marginTop: 25,
+  subtext: {
+    fontSize: 20,
+    color: COLORS.primary,
     textAlign: "center",
-    color: "#888",
   },
-  signupLink: {
-    color: "#ff3399",
-    fontWeight: "bold",
+  link: {
+    marginTop: 20,
+    textAlign: "center",
+    color: COLORS.primary,
+    fontWeight: "600",
   },
 });
