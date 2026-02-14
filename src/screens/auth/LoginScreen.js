@@ -1,46 +1,39 @@
-import { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
-import api from "../../services/api";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleLogin = async () => {
-    try {
-      const response = await api.post("/auth/login", {
-        email,
-        password,
-      });
-
-      Alert.alert("Success", "Login successful");
-      console.log(response.data);
-    } catch (error) {
-      Alert.alert("Error", "Invalid credentials");
-    }
-  };
-
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      
+      <Text style={styles.title}>Welcome Back!</Text>
+      <Text style={styles.subtitle}>So happy to see you again ♡</Text>
 
       <TextInput
         placeholder="Email"
+        placeholderTextColor="#d98cb3"
         style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
       />
 
       <TextInput
         placeholder="Password"
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
+        placeholderTextColor="#d98cb3"
         secureTextEntry
+        style={styles.input}
       />
 
-      <Button title="Login" onPress={handleLogin} />
+      <TouchableOpacity>
+        <LinearGradient
+          colors={["#ff4da6", "#ff66b3"]}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>Log In</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+
+      <Text style={styles.signupText}>
+        Don't have an account? <Text style={styles.signupLink}>Sign Up</Text>
+      </Text>
+
     </View>
   );
 }
@@ -48,18 +41,47 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#ffe6f0",
+    padding: 25,
     justifyContent: "center",
-    padding: 20,
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#ff3399",
     textAlign: "center",
+    marginBottom: 10,
+  },
+  subtitle: {
+    textAlign: "center",
+    color: "#cc6699",
+    marginBottom: 30,
   },
   input: {
-    borderWidth: 1,
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 5,
+    backgroundColor: "#fff",
+    borderRadius: 25,
+    padding: 15,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  button: {
+    borderRadius: 30,
+    paddingVertical: 15,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  signupText: {
+    marginTop: 25,
+    textAlign: "center",
+    color: "#888",
+  },
+  signupLink: {
+    color: "#ff3399",
+    fontWeight: "bold",
   },
 });
