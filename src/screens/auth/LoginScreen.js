@@ -84,4 +84,14 @@ const styles = StyleSheet.create({
     color: "#ff3399",
     fontWeight: "bold",
   },
+
+  forgotWrap: { alignSelf: "flex-end", marginTop: -6, marginBottom: 14 },
+  forgotText: { color: colors.primary, fontWeight: "800", fontSize: 13 },
+
+  dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: 14 },
+  divider: { flex: 1, height: 1, backgroundColor: colors.border },
+  dividerText: { marginHorizontal: 10, color: colors.subtext, fontWeight: "700", fontSize: 12 },
+
+  footer: { marginTop: 18, textAlign: "center", color: colors.subtext, fontSize: 12 },
 });
+
