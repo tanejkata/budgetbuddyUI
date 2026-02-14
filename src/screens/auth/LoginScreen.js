@@ -1,17 +1,43 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "../../constants/colors";
+import { loginUser } from "../../services/authService";
+
 export default function LoginScreen() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async () => {
+    try {
+      const data = await loginUser(email, password);
+      console.log("Login Success:", data);
+      Alert.alert("Success", "Login successful");
+    } catch (error) {
+      const message = error.response?.data?.message || "Login failed";
+      Alert.alert("Error", message);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      
       <Text style={styles.title}>Welcome Back!</Text>
       <Text style={styles.subtitle}>So happy to see you again ♡</Text>
 
       <TextInput
         placeholder="Email"
+        autoCapitalize="none"
         placeholderTextColor="#d98cb3"
         style={styles.input}
+        value={email}
+        onChangeText={setEmail}
       />
 
       <TextInput
@@ -19,13 +45,12 @@ export default function LoginScreen() {
         placeholderTextColor="#d98cb3"
         secureTextEntry
         style={styles.input}
+        value={password}
+        onChangeText={setPassword}
       />
 
-      <TouchableOpacity>
-        <LinearGradient
-          colors={["#ff4da6", "#ff66b3"]}
-          style={styles.button}
-        >
+      <TouchableOpacity onPress={handleLogin}>
+        <LinearGradient colors={["#ff4da6", "#ff66b3"]} style={styles.button}>
           <Text style={styles.buttonText}>Log In</Text>
         </LinearGradient>
       </TouchableOpacity>
@@ -33,7 +58,6 @@ export default function LoginScreen() {
       <Text style={styles.signupText}>
         Don't have an account? <Text style={styles.signupLink}>Sign Up</Text>
       </Text>
-
     </View>
   );
 }
@@ -84,13 +108,4 @@ const styles = StyleSheet.create({
     color: "#ff3399",
     fontWeight: "bold",
   },
-
-  forgotWrap: { alignSelf: "flex-end", marginTop: -6, marginBottom: 14 },
-  forgotText: { color: colors.primary, fontWeight: "800", fontSize: 13 },
-
-  dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: 14 },
-  divider: { flex: 1, height: 1, backgroundColor: colors.border },
-  dividerText: { marginHorizontal: 10, color: colors.subtext, fontWeight: "700", fontSize: 12 },
-
-  footer: { marginTop: 18, textAlign: "center", color: colors.subtext, fontSize: 12 },
 });
