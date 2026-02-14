@@ -10,21 +10,28 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "../../constants/colors";
 import { loginUser } from "../../services/authService";
+import LoadingScreen from "../common/LoadingScreen";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     try {
+      setLoading(true);
       const data = await loginUser(email, password);
-      console.log("Login Success:", data);
-      Alert.alert("Success", "Login successful");
+      console.log(data);
     } catch (error) {
-      const message = error.response?.data?.message || "Login failed";
-      Alert.alert("Error", message);
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return <LoadingScreen message="Logging you in..." />;
+  }
 
   return (
     <View style={styles.container}>
