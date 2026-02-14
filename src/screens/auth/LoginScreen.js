@@ -1,137 +1,88 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
-import CustomInput from "../../components/CustomInput";
-import CustomButton from "../../components/CustomButton";
-import { colors } from "../../constants/colors";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
-export default function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-
-  const validate = () => {
-    const next = {};
-    if (!email.trim()) next.email = "Email is required";
-    if (!password.trim()) next.password = "Password is required";
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
-
-  const onLogin = async () => {
-    if (!validate()) return;
-
-    setLoading(true);
-    try {
-      // TODO: connect to backend later (authService.login)
-      // await authService.login({ email, password });
-
-      // For now: fake success
-      setTimeout(() => {
-        setLoading(false);
-        // Example: navigate to main tabs
-        navigation.replace("MainTabs");
-      }, 700);
-    } catch (e) {
-      setLoading(false);
-      setErrors({ general: "Login failed. Please try again." });
-    }
-  };
-
+export default function LoginScreen() {
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.bg }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.logo}>BuddyBudget</Text>
-          <Text style={styles.tagline}>Track spending. Stay cute. Stay on budget 💗</Text>
-        </View>
+    <View style={styles.container}>
+      
+      <Text style={styles.title}>Welcome Back!</Text>
+      <Text style={styles.subtitle}>So happy to see you again ♡</Text>
 
-        {/* Card */}
-        <View style={styles.card}>
-          <Text style={styles.title}>Welcome back</Text>
-          <Text style={styles.subtitle}>Log in to continue</Text>
+      <TextInput
+        placeholder="Email"
+        placeholderTextColor="#d98cb3"
+        style={styles.input}
+      />
 
-          {errors.general ? <Text style={styles.generalError}>{errors.general}</Text> : null}
+      <TextInput
+        placeholder="Password"
+        placeholderTextColor="#d98cb3"
+        secureTextEntry
+        style={styles.input}
+      />
 
-          <CustomInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="you@email.com"
-            keyboardType="email-address"
-            error={errors.email}
-          />
+      <TouchableOpacity>
+        <LinearGradient
+          colors={["#ff4da6", "#ff66b3"]}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>Log In</Text>
+        </LinearGradient>
+      </TouchableOpacity>
 
-          <CustomInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="••••••••"
-            secureTextEntry
-            error={errors.password}
-          />
+      <Text style={styles.signupText}>
+        Don't have an account? <Text style={styles.signupLink}>Sign Up</Text>
+      </Text>
 
-          <TouchableOpacity activeOpacity={0.8} style={styles.forgotWrap}>
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </TouchableOpacity>
-
-          <CustomButton title="Log In" onPress={onLogin} loading={loading} />
-
-          <View style={styles.dividerRow}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.divider} />
-          </View>
-
-          <CustomButton
-            title="Create an account"
-            variant="secondary"
-            onPress={() => navigation.navigate("Register")}
-          />
-        </View>
-
-        {/* Footer */}
-        <Text style={styles.footer}>
-          By continuing, you agree to BuddyBudget’s Terms & Privacy.
-        </Text>
-      </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 20, paddingTop: 60 },
-  header: { alignItems: "center", marginBottom: 22 },
-  logo: { fontSize: 34, fontWeight: "900", color: colors.text },
-  tagline: { marginTop: 8, fontSize: 13, color: colors.subtext, textAlign: "center" },
-
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 22,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
+  container: {
+    flex: 1,
+    backgroundColor: "#ffe6f0",
+    padding: 25,
+    justifyContent: "center",
   },
-
-  title: { fontSize: 22, fontWeight: "900", color: colors.text },
-  subtitle: { marginTop: 4, marginBottom: 14, color: colors.subtext, fontSize: 13 },
-
-  generalError: {
-    backgroundColor: "#FEE2E2",
-    color: "#991B1B",
-    padding: 10,
-    borderRadius: 12,
-    marginBottom: 12,
-    fontSize: 13,
+  title: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#ff3399",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  subtitle: {
+    textAlign: "center",
+    color: "#cc6699",
+    marginBottom: 30,
+  },
+  input: {
+    backgroundColor: "#fff",
+    borderRadius: 25,
+    padding: 15,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  button: {
+    borderRadius: 30,
+    paddingVertical: 15,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  signupText: {
+    marginTop: 25,
+    textAlign: "center",
+    color: "#888",
+  },
+  signupLink: {
+    color: "#ff3399",
+    fontWeight: "bold",
   },
 
   forgotWrap: { alignSelf: "flex-end", marginTop: -6, marginBottom: 14 },
