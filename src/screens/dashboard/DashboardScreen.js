@@ -13,6 +13,8 @@ import SpendCard from "../../components/SpendCard";
 import { COLORS, RADIUS, SHADOW, SPACING } from "../../constants/theme";
 import { useTransactions } from "../../context/TransactionContext";
 import { useAuth } from "../../hooks/useAuth";
+import { SafeAreaView } from "react-native-safe-area-context";
+import ScreenWrapper from "../../components/ScreenWrapper";
 
 const PIE_COLORS = [
   "#FF4FA3",
@@ -52,7 +54,7 @@ export default function DashboardScreen() {
       })) || [];
 
   return (
-    <LinearGradient colors={[COLORS.bgTop, COLORS.bgBottom]} style={styles.bg}>
+    <ScreenWrapper>
       <ScrollView
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
@@ -150,7 +152,7 @@ export default function DashboardScreen() {
 
         <View style={{ height: 30 }} />
       </ScrollView>
-    </LinearGradient>
+    </ScreenWrapper>
   );
 }
 

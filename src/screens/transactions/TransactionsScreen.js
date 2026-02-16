@@ -11,6 +11,7 @@ import {
 import { COLORS, SPACING } from "../../constants/theme";
 import { useTransactions } from "../../context/TransactionContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import ScreenWrapper from "../../components/ScreenWrapper";
 
 export default function TransactionsScreen() {
   const { transactions, fetchTransactions } = useTransactions([]);
@@ -86,6 +87,7 @@ export default function TransactionsScreen() {
     const isIncome = item.transactionType === "income";
 
     return (
+
       <View style={styles.card}>
         <View style={styles.row}>
           <Text style={styles.category}>{item.categoryId}</Text>
@@ -104,10 +106,13 @@ export default function TransactionsScreen() {
           </Text>
         </View>
       </View>
+
     );
   };
 
   return (
+    <ScreenWrapper>
+
     <View style={styles.container}>
       {/* TYPE FILTER */}
       <View style={styles.filterRow}>
@@ -204,6 +209,8 @@ export default function TransactionsScreen() {
         contentContainerStyle={{ paddingBottom: 20 }}
       />
     </View>
+    </ScreenWrapper>
+
   );
 }
 

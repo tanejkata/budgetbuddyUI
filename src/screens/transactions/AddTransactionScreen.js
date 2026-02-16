@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/theme";
 import { useTransactions } from "../../context/TransactionContext";
 import { useAuth } from "../../hooks/useAuth";
+import ScreenWrapper from "../../components/ScreenWrapper";
 
 const CATEGORY_PRESETS = [
   { key: "Food", icon: "restaurant-outline", accent: "#FFD36A" },
@@ -93,6 +94,8 @@ export default function AddTransactionScreen({ navigation }) {
   };
 
   return (
+    <ScreenWrapper>
+
     <KeyboardAvoidingView
       style={styles.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -259,6 +262,8 @@ export default function AddTransactionScreen({ navigation }) {
         <View style={{ height: 26 }} />
       </ScrollView>
     </KeyboardAvoidingView>
+    </ScreenWrapper>
+
   );
 }
 
