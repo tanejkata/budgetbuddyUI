@@ -5,19 +5,22 @@ import { BudgetProvider } from "./src/context/BudgetContext";
 import { TransactionProvider } from "./src/context/TransactionContext";
 import { CategoryProvider } from "./src/context/CategoryContext";
 import { InsightProvider } from "./src/context/InsightContext";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CategoryProvider>
-        <BudgetProvider>
-          <TransactionProvider>
-            <InsightProvider>
-              <RootNavigator />
-            </InsightProvider>
-          </TransactionProvider>
-        </BudgetProvider>
-      </CategoryProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <CategoryProvider>
+          <BudgetProvider>
+            <TransactionProvider>
+              <InsightProvider>
+                <RootNavigator />
+              </InsightProvider>
+            </TransactionProvider>
+          </BudgetProvider>
+        </CategoryProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

@@ -1,26 +1,26 @@
 import api from "./api";
 
-// Create
+// CREATE
 export const createTransaction = async (payload) => {
-  const res = await api.post("/transactions", payload);
+  const res = await api.post("/transaction", payload);
   return res.data;
 };
 
-// Update
+// UPDATE
 export const updateTransaction = async (id, payload) => {
-  const res = await api.put(`/transactions/${id}`, payload);
+  const res = await api.put(`/transaction/${id}`, payload);
   return res.data;
 };
 
-// Delete
+// DELETE
 export const deleteTransaction = async (id) => {
-  const res = await api.delete(`/transactions/${id}`);
+  const res = await api.delete(`/transaction/${id}`);
   return res.data;
 };
 
-// Get by year/month/day
-export const getTransactions = async (params) => {
+// GET
+export const getTransactions = async (params = {}) => {
   const query = new URLSearchParams(params).toString();
-  const res = await api.get(`/transactions/filter?${query}`);
+  const res = await api.get(query ? `/transaction?${query}` : "/transaction");
   return res.data;
 };

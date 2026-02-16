@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const apiURL = "https://buddybudget-6j2e.onrender.com";
+// const apiURL = "http:localhost:5050";
+
 const api = axios.create({
-  baseURL: "https://your-backend.onrender.com", // change
+  baseURL: apiURL, // change
   headers: {
     "Content-Type": "application/json",
   },
@@ -12,7 +15,6 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.log("API Error:", error.response?.data || error.message);
     return Promise.reject(error);
   }
 );

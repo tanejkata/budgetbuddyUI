@@ -24,7 +24,6 @@ export default function RegisterScreen({ navigation }) {
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
   const onCreate = async () => {
-    console.log(pw, confirmPw);
     try {
       const data = await registerUser(fullName, email, pw);
       navigation.navigate("Login");

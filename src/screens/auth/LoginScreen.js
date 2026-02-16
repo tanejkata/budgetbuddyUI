@@ -8,16 +8,17 @@ import { loginUser } from "../../services/authService";
 import { useAuth } from "../../hooks/useAuth";
 
 export default function LoginScreen({ navigation }) {
-  const { setUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     try {
       const data = await loginUser(email, password);
-      setUser(data);
+      login(data);
     } catch (err) {
       Alert.alert("Login Failed");
+      Alert.alert("Login Failed", err.message);
     }
   };
 
