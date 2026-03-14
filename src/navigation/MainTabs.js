@@ -6,7 +6,7 @@ import { COLORS } from "../constants/theme";
 import DashboardScreen from "../screens/dashboard/DashboardScreen";
 import AddTransactionScreen from "../screens/transactions/AddTransactionScreen";
 import TransactionsScreen from "../screens/transactions/TransactionsScreen";
-// import ProfileScreen from "../screens/profile/ProfileScreen";
+import ProfileScreen from "../screens/profile/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -66,10 +66,16 @@ export default function MainTabs() {
         options={{ tabBarLabel: "Transactions" }}
       />
 
-      {/* <Tab.Screen
+      <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-      /> */}
+        options={{
+          tabBarLabel: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,9 +14,19 @@ import {
   MaterialCommunityIcons,
   AntDesign,
 } from "@expo/vector-icons";
-
+import { useAuth } from "../../hooks/useAuth";
+import { useTransactions } from "../../context/TransactionContext";
+import { updateNotification } from "../../services/userService";
 const ProfileScreen = () => {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const { user, logout } = useAuth();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(user.notificationsEnabled);
+  const { fetchTransactions } = useTransactions();
+  const displayName = user?.name || user?.email?.split("@")[0] || "Buddy";
+
+  useEffect(() => {
+    //fetchTransactions({ userId: user.userId });
+    //setNotificationsEnabled(user.notificationsEnabled);
+  }, []);
 
   const settingsData = [
     {
@@ -49,24 +59,12 @@ const ProfileScreen = () => {
           style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
         />
       ),
+      onPress: updateNotification(user.userId, {
+        notificationsEnabled: notificationsEnabled,
+      }),
     },
     {
       id: 3,
-      title: "Theme",
-      subtitle: "Soft Pink",
-      icon: (
-        <View style={[styles.iconCircle, { backgroundColor: "#FFE3F0" }]}>
-          <MaterialCommunityIcons
-            name="palette-outline"
-            size={20}
-            color="#EC4899"
-          />
-        </View>
-      ),
-      right: <Feather name="chevron-right" size={20} color="#A6A6A6" />,
-    },
-    {
-      id: 4,
       title: "Help & Support",
       subtitle: "Get help with your account",
       icon: (
@@ -77,7 +75,7 @@ const ProfileScreen = () => {
       right: <Feather name="chevron-right" size={20} color="#A6A6A6" />,
     },
     {
-      id: 5,
+      id: 4,
       title: "About",
       subtitle: "Buddy Budget v1.0",
       icon: (
@@ -91,6 +89,18 @@ const ProfileScreen = () => {
       ),
       right: <Feather name="chevron-right" size={20} color="#A6A6A6" />,
     },
+    {
+      id: 5,
+      title: "Logout",
+      subtitle: "see you soon",
+      icon: (
+        <View style={[styles.iconCircle, { backgroundColor: "#FFF6CC" }]}>
+          <Ionicons name="log-out-outline" size={20} color="#D4A017" />
+        </View>
+      ),
+      right: <Feather name="chevron-right" size={20} color="#A6A6A6" />,
+      onPress: logout,
+    },
   ];
 
   const renderSettingItem = (item) => {
@@ -99,6 +109,7 @@ const ProfileScreen = () => {
         key={item.id}
         style={styles.settingCard}
         activeOpacity={0.8}
+        onPress={item?.onPress}
       >
         <View style={styles.settingLeft}>
           {item.icon}
@@ -137,8 +148,8 @@ const ProfileScreen = () => {
               <View style={styles.onlineDot} />
             </View>
 
-            <Text style={styles.userName}>Sarah Johnson</Text>
-            <Text style={styles.userEmail}>sarah.j@email.com</Text>
+            <Text style={styles.userName}>{user.name}</Text>
+            <Text style={styles.userEmail}>{user.email}</Text>
 
             <TouchableOpacity style={styles.editButton} activeOpacity={0.85}>
               <Text style={styles.editButtonText}>Edit Profile</Text>
