@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { Picker } from "@react-native-picker/picker";
+import { Linking } from "react-native";
 import {
   View,
   Text,
@@ -15,30 +17,91 @@ import {
   AntDesign,
 } from "@expo/vector-icons";
 import { useAuth } from "../../hooks/useAuth";
+import { getUserProfile, updateUserProfile } from "../../services/userService";
 import { useTransactions } from "../../context/TransactionContext";
 import { updateNotification } from "../../services/userService";
-const ProfileScreen = () => {
-  const { user, logout } = useAuth();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(user.notificationsEnabled);
-  const { fetchTransactions } = useTransactions();
+const ProfileScreen = ({ navigation }) => {
+  const { user, logout, login } = useAuth();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    user?.notificationsEnabled ?? false
+  );
+  const [currencyMenuVisible, setCurrencyMenuVisible] = useState(false);
+  const [currency, setCurrency] = useState(user.currency);
   const displayName = user?.name || user?.email?.split("@")[0] || "Buddy";
 
+  const openSupportEmail = async () => {
+    const email = "support@buddybudget.com";
+    const subject = "BuddyBudget Support";
+    const body = `User: ${user.email}\nApp: BuddyBudget\n\nDescribe your issue here`;
+
+    const url = `mailto:${email}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+
+    const supported = await Linking.canOpenURL(url);
+
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Linking.openURL("https://mail.google.com");
+    }
+  };
+
   useEffect(() => {
-    //fetchTransactions({ userId: user.userId });
-    //setNotificationsEnabled(user.notificationsEnabled);
+    const loadProfile = async () => {
+      try {
+        const profile = await getUserProfile(user._id);
+        login(profile); // update auth context
+        setNotificationsEnabled(profile.notificationsEnabled);
+      } catch (error) {
+        console.log("Failed to load profile", error);
+      }
+    };
+
+    loadProfile();
   }, []);
 
+  const handleToggleNotifications = async (value) => {
+    try {
+      setNotificationsEnabled(value);
+      let a = await updateNotification(user._id, {
+        notificationsEnabled: value,
+      });
+
+      const updatedProfile = await getUserProfile(user._id);
+
+      login(updatedProfile); // update global user
+    } catch (error) {
+      console.log("Notification update failed", error);
+    }
+  };
+
+  const handleCurrencyChange = async (value) => {
+    try {
+      setCurrency(value);
+      setCurrencyMenuVisible(false);
+      const updatedUser = await updateUserProfile(user._id, {
+        currency: value,
+      });
+      console.log(updatedUser);
+
+      login(updatedUser);
+    } catch (error) {
+      console.log("Currency update failed", error);
+    }
+  };
   const settingsData = [
     {
       id: 1,
       title: "Currency",
-      subtitle: "USD ($)",
+      subtitle: currency,
       icon: (
         <View style={[styles.iconCircle, { backgroundColor: "#DDF5E5" }]}>
           <Text style={[styles.iconText, { color: "#22A45D" }]}>$</Text>
         </View>
       ),
-      right: <Feather name="chevron-right" size={20} color="#A6A6A6" />,
+      right: <Feather name="chevron-down" size={18} color="#A6A6A6" />,
+      onPress: () => setCurrencyMenuVisible(true),
     },
     {
       id: 2,
@@ -52,16 +115,13 @@ const ProfileScreen = () => {
       right: (
         <Switch
           value={notificationsEnabled}
-          onValueChange={setNotificationsEnabled}
+          onValueChange={handleToggleNotifications}
           trackColor={{ false: "#E5E5E5", true: "#F49AC2" }}
           thumbColor={notificationsEnabled ? "#FFFFFF" : "#FFFFFF"}
           ios_backgroundColor="#E5E5E5"
           style={{ transform: [{ scaleX: 0.95 }, { scaleY: 0.95 }] }}
         />
       ),
-      onPress: updateNotification(user.userId, {
-        notificationsEnabled: notificationsEnabled,
-      }),
     },
     {
       id: 3,
@@ -73,6 +133,7 @@ const ProfileScreen = () => {
         </View>
       ),
       right: <Feather name="chevron-right" size={20} color="#A6A6A6" />,
+      onPress: () => openSupportEmail(),
     },
     {
       id: 4,
@@ -88,6 +149,7 @@ const ProfileScreen = () => {
         </View>
       ),
       right: <Feather name="chevron-right" size={20} color="#A6A6A6" />,
+      onPress: () => navigation.navigate("About"),
     },
     {
       id: 5,
@@ -166,6 +228,28 @@ const ProfileScreen = () => {
           {/* Settings */}
           <Text style={styles.sectionTitle}>Settings</Text>
           {settingsData.map(renderSettingItem)}
+          {currencyMenuVisible && (
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalBox}>
+                {["USD", "CAD", "EUR", "INR"].map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={styles.currencyItem}
+                    onPress={() => handleCurrencyChange(item)}
+                  >
+                    <Text style={styles.currencyText}>{item}</Text>
+                  </TouchableOpacity>
+                ))}
+
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  onPress={() => setCurrencyMenuVisible(false)}
+                >
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -342,5 +426,66 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#9CA3AF",
     marginTop: 2,
+  },
+  dropdown: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    marginTop: 8,
+    paddingVertical: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+
+  dropdownText: {
+    fontSize: 14,
+    color: "#374151",
+    fontWeight: "600",
+  },
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  modalBox: {
+    width: "70%",
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    paddingVertical: 10,
+  },
+
+  currencyItem: {
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+
+  currencyText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  cancelBtn: {
+    borderTopWidth: 1,
+    borderColor: "#EEE",
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+
+  cancelText: {
+    fontSize: 15,
+    color: "#FF4FA3",
   },
 });

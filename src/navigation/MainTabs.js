@@ -1,5 +1,6 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../constants/theme";
 
@@ -7,16 +8,28 @@ import DashboardScreen from "../screens/dashboard/DashboardScreen";
 import AddTransactionScreen from "../screens/transactions/AddTransactionScreen";
 import TransactionsScreen from "../screens/transactions/TransactionsScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
+import AboutUsScreen from "../screens/profile/AboutUsScreen";
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+function ProfileStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ProfileMain" component={ProfileScreen} />
+      <Stack.Screen name="About" component={AboutUsScreen} />
+    </Stack.Navigator>
+  );
+}
 
 export default function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-    lazy: true,           // 👈 VERY IMPORTANT
-    unmountOnBlur: false,
+        lazy: true,
+        unmountOnBlur: false,
+
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: "#999",
 
@@ -68,7 +81,7 @@ export default function MainTabs() {
 
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileStack}
         options={{
           tabBarLabel: "Profile",
           tabBarIcon: ({ color, size }) => (

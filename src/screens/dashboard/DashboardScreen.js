@@ -33,7 +33,7 @@ export default function DashboardScreen() {
 
   // Fetch from backend on mount
   useEffect(() => {
-    fetchTransactions({ userId: user.userId });
+    fetchTransactions({ userId: user._id });
   }, []);
 
   const currentMonth = months?.[0];

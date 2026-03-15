@@ -69,7 +69,7 @@ export default function AddTransactionScreen({ navigation }) {
       setLoading(true);
 
       await addTransaction({
-        userId: user.userId, // from auth context
+        userId: user._id, // from auth context
         categoryId: selectedCategory, // TEMP until you create category route
         amount: Number(amount),
         transactionType: type.toLowerCase(), // "expense" or "income"

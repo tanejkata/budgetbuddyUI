@@ -30,12 +30,12 @@ export default function TransactionsScreen() {
 
   // Fetch transactions from API
   useEffect(() => {
-    fetchTransactions({ userId: user.userId });
+    fetchTransactions({ userId: user._id });
   }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchTransactions({ userId: user.userId });
+    await fetchTransactions({ userId: user._id });
     setRefreshing(false);
   };
 
