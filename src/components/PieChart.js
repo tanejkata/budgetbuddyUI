@@ -1,129 +1,95 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Svg, { G, Path, Circle } from "react-native-svg";
-import { COLORS } from "../constants/theme";
+import { PieChart } from "react-native-chart-kit";
 
-function polarToCartesian(cx, cy, r, angleDeg) {
-  const angleRad = ((angleDeg - 90) * Math.PI) / 180.0;
-  return {
-    x: cx + r * Math.cos(angleRad),
-    y: cy + r * Math.sin(angleRad),
-  };
-}
-
-function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
-  const startOuter = polarToCartesian(cx, cy, rOuter, endAngle);
-  const endOuter = polarToCartesian(cx, cy, rOuter, startAngle);
-  const startInner = polarToCartesian(cx, cy, rInner, startAngle);
-  const endInner = polarToCartesian(cx, cy, rInner, endAngle);
-
-  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-
-  return [
-    `M ${startOuter.x} ${startOuter.y}`,
-    `A ${rOuter} ${rOuter} 0 ${largeArcFlag} 0 ${endOuter.x} ${endOuter.y}`,
-    `L ${startInner.x} ${startInner.y}`,
-    `A ${rInner} ${rInner} 0 ${largeArcFlag} 1 ${endInner.x} ${endInner.y}`,
-    "Z",
-  ].join(" ");
-}
-
-export default function PieChart({
-  size = 170,
-  strokeWidth = 22,
+export default function ExpensePieChart({
   data = [],
-  centerTitle = "Spent",
-  centerValue = "$0",
-  subtitle = "This month",
+  total = 0,
+  remaining = 0,
 }) {
-  const total = data.reduce((sum, d) => sum + (d.value || 0), 0) || 1;
 
-  const radius = size / 2;
-  const rOuter = radius - strokeWidth / 2;
-  const rInner = rOuter - strokeWidth;
-
-  let startAngle = 0;
+  const chartData = data.map((item) => ({
+    name: item.label,
+    population: item.value,
+    color: item.color,
+    legendFontColor: "#7F7F7F",
+    legendFontSize: 12,
+  }));
 
   return (
-    <View style={styles.wrap}>
-      <View style={{ width: size, height: size }}>
-        <Svg width={size} height={size}>
-          <G>
-            {/* subtle ring background */}
-            <Circle
-              cx={radius}
-              cy={radius}
-              r={rOuter}
-              fill="transparent"
-              stroke="#F7D6E8"
-              strokeWidth={strokeWidth}
-            />
+    <View style={styles.wrapper}>
 
-            {data.map((slice, idx) => {
-              const angle = (slice.value / total) * 360;
-              const endAngle = startAngle + angle;
-
-              const d = arcPath(
-                radius,
-                radius,
-                rOuter,
-                rInner,
-                startAngle,
-                endAngle
-              );
-              const path = (
-                <Path
-                  key={`${slice.label}-${idx}`}
-                  d={d}
-                  fill={slice.color}
-                  strokeLinejoin="round"
-                />
-              );
-
-              startAngle = endAngle;
-              return path;
-            })}
-          </G>
-        </Svg>
-
-        {/* Center labels */}
-        <View style={styles.center}>
-          <Text style={styles.centerTitle}>{centerTitle}</Text>
-          <Text style={styles.centerValue}>{centerValue}</Text>
-          <Text style={styles.centerSub}>{subtitle}</Text>
-        </View>
+      {/* PIE CHART */}
+      <View style={styles.chartContainer}>
+        <PieChart
+          data={chartData}
+          width={190}
+          height={170}
+          accessor="population"
+          backgroundColor="transparent"
+          paddingLeft="30"
+          hasLegend={false}
+          chartConfig={{
+            backgroundGradientFrom: "#ffffff",
+            backgroundGradientTo: "#ffffff",
+            color: () => "#000",
+          }}
+        />
       </View>
+
+      {/* TOTAL + REMAINING */}
+      <View style={styles.summary}>
+        <Text style={styles.totalLabel}>Total</Text>
+        <Text style={styles.totalValue}>${total}</Text>
+
+        <Text style={styles.remainingLabel}>Remaining</Text>
+        <Text style={styles.remainingValue}>${remaining}</Text>
+      </View>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  center: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  centerTitle: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginBottom: 2,
-  },
-  centerValue: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: COLORS.text,
-  },
-  centerSub: {
-    fontSize: 11,
-    color: COLORS.muted,
-    marginTop: 2,
-  },
+
+wrapper:{
+  flexDirection:"row",
+  alignItems:"center",
+  justifyContent:"center",
+  marginVertical:12
+},
+
+chartContainer:{
+  justifyContent:"center",
+  alignItems:"center",
+  marginRight:10
+},
+
+summary:{
+  justifyContent:"center"
+},
+
+totalLabel:{
+  fontSize:15,
+  color:"#6B7280"
+},
+
+totalValue:{
+  fontSize:28,
+  fontWeight:"700",
+  color:"#111827",
+  marginBottom:12
+},
+
+remainingLabel:{
+  fontSize:14,
+  color:"#6B7280"
+},
+
+remainingValue:{
+  fontSize:22,
+  fontWeight:"700",
+  color:"#10B981"
+}
+
 });

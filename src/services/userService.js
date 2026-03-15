@@ -6,8 +6,6 @@ export const getUserProfile = async (userId) => {
 };
 
 export const updateUserProfile = async (userId, payload) => {
-  console.log(userId, payload);
-
   const res = await api.put(`/user/${userId}`, payload);
   return res.data?.data?.user;
 };

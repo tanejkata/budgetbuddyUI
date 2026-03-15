@@ -1,11 +1,11 @@
 import api from "./api";
 
 export const setMonthlyBudget = async (payload) => {
-  const res = await api.post("/budgets", payload);
+  const res = await api.post("/budget", payload);
   return res.data;
 };
 
-export const getMonthlyBudget = async (userId, month) => {
-  const res = await api.get(`/budgets/${userId}/${month}`);
+export const getMonthlyBudget = async (userId, year, month) => {
+  const res = await api.get(`/budget/${userId}/${year}/${month}`);
   return res.data;
 };

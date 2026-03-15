@@ -7,54 +7,24 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  ScrollView,
+  ActivityIndicator,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { Ionicons, Feather } from "@expo/vector-icons";
+import { useAuth } from "../../hooks/useAuth";
+import { changePassword } from "../../services/userService";
 
-const ChangePasswordScreen = ({ navigation }) => {
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [showOldPassword, setShowOldPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const handleChangePassword = () => {
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      Alert.alert("Missing Fields", "Please fill in all password fields.");
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      Alert.alert(
-        "Weak Password",
-        "New password must be at least 6 characters long."
-      );
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      Alert.alert(
-        "Password Mismatch",
-        "New password and confirm password do not match."
-      );
-      return;
-    }
-
-    Alert.alert("Success", "Password set successfully!");
-    setOldPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-  };
-
-  const PasswordInput = ({
-    label,
-    value,
-    onChangeText,
-    placeholder,
-    secureTextEntry,
-    toggleSecure,
-  }) => (
+const PasswordInput = ({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  secureTextEntry,
+  toggleSecure,
+}) => {
+  return (
     <View style={styles.inputBlock}>
       <Text style={styles.inputLabel}>{label}</Text>
 
@@ -66,6 +36,8 @@ const ChangePasswordScreen = ({ navigation }) => {
           placeholder={placeholder}
           placeholderTextColor="#B8A8B0"
           secureTextEntry={secureTextEntry}
+          autoCapitalize="none"
+          autoCorrect={false}
         />
 
         <TouchableOpacity onPress={toggleSecure} style={styles.eyeButton}>
@@ -78,83 +50,152 @@ const ChangePasswordScreen = ({ navigation }) => {
       </View>
     </View>
   );
+};
+
+const ChangePasswordScreen = ({ navigation }) => {
+  const { user } = useAuth();
+
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      Alert.alert("Missing Fields", "Please fill in all password fields.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      Alert.alert("Weak Password", "Password must be at least 6 characters.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Password Mismatch", "Passwords do not match.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await changePassword(user._id, {
+        oldPassword,
+        newPassword,
+      });
+
+      setLoading(false);
+
+      Alert.alert("Success", "Password updated successfully!", [
+        { text: "OK", onPress: () => navigation.goBack() },
+      ]);
+
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      setLoading(false);
+      Alert.alert("Error", "Failed to update password.");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.headerIconButton}
-          >
-            <Ionicons name="chevron-back" size={22} color="#5B4B55" />
-          </TouchableOpacity>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+          {/* Header */}
 
-          <Text style={styles.headerTitle}>Change Password</Text>
-
-          <View style={styles.headerIconPlaceholder} />
-        </View>
-
-        {/* Main Card */}
-        <View style={styles.content}>
-          <View style={styles.card}>
-            <View style={styles.lockCircle}>
-              <Ionicons name="lock-closed" size={28} color="#FFFFFF" />
-            </View>
-
-            <Text style={styles.title}>Update Your Password</Text>
-            <Text style={styles.subtitle}>
-              Keep your Buddy Budget account secure with a strong password.
-            </Text>
-
-            <PasswordInput
-              label="Old Password"
-              value={oldPassword}
-              onChangeText={setOldPassword}
-              placeholder="Enter old password"
-              secureTextEntry={!showOldPassword}
-              toggleSecure={() => setShowOldPassword(!showOldPassword)}
-            />
-
-            <PasswordInput
-              label="New Password"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              placeholder="Enter new password"
-              secureTextEntry={!showNewPassword}
-              toggleSecure={() => setShowNewPassword(!showNewPassword)}
-            />
-
-            <PasswordInput
-              label="Confirm New Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="Confirm new password"
-              secureTextEntry={!showConfirmPassword}
-              toggleSecure={() =>
-                setShowConfirmPassword(!showConfirmPassword)
-              }
-            />
-
+          <View style={styles.header}>
             <TouchableOpacity
-              style={styles.saveButton}
-              activeOpacity={0.85}
-              onPress={handleChangePassword}
-            >
-              <Text style={styles.saveButtonText}>Save Password</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelButton}
-              activeOpacity={0.85}
               onPress={() => navigation.goBack()}
+              style={styles.headerIconButton}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Ionicons name="chevron-back" size={22} color="#5B4B55" />
             </TouchableOpacity>
+
+            <Text style={styles.headerTitle}>Change Password</Text>
+
+            <View style={{ width: 34 }} />
           </View>
+
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.content}
+          >
+            <View style={styles.card}>
+              {/* Lock icon */}
+
+              <View style={styles.lockCircle}>
+                <Ionicons name="lock-closed" size={28} color="#fff" />
+              </View>
+
+              <Text style={styles.title}>Update Your Password</Text>
+
+              <Text style={styles.subtitle}>
+                Keep your BuddyBudget account secure with a strong password.
+              </Text>
+
+              <PasswordInput
+                label="Old Password"
+                value={oldPassword}
+                onChangeText={setOldPassword}
+                placeholder="Enter old password"
+                secureTextEntry={!showOldPassword}
+                toggleSecure={() => setShowOldPassword(!showOldPassword)}
+              />
+
+              <PasswordInput
+                label="New Password"
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="Enter new password"
+                secureTextEntry={!showNewPassword}
+                toggleSecure={() => setShowNewPassword(!showNewPassword)}
+              />
+
+              <PasswordInput
+                label="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirm new password"
+                secureTextEntry={!showConfirmPassword}
+                toggleSecure={() =>
+                  setShowConfirmPassword(!showConfirmPassword)
+                }
+              />
+
+              {/* Save button */}
+
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleChangePassword}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#253046" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Password</Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Cancel */}
+
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => navigation.goBack()}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 };
@@ -166,10 +207,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FDEFF5",
   },
+
   container: {
     flex: 1,
-    backgroundColor: "#FDEFF5",
   },
+
   header: {
     height: 64,
     backgroundColor: "#FFF8FB",
@@ -180,6 +222,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#F5DDE8",
   },
+
   headerIconButton: {
     width: 34,
     height: 34,
@@ -188,31 +231,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  headerIconPlaceholder: {
-    width: 34,
-    height: 34,
-  },
+
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#3F2F39",
   },
+
   content: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 22,
+    padding: 18,
   },
+
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
     borderRadius: 24,
-    paddingHorizontal: 18,
-    paddingVertical: 24,
+    padding: 20,
     shadowColor: "#E8B7CA",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 10,
     elevation: 3,
   },
+
   lockCircle: {
     width: 72,
     height: 72,
@@ -223,31 +263,33 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 16,
   },
+
   title: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#2F2730",
     textAlign: "center",
-    marginBottom: 6,
+    color: "#2F2730",
   },
+
   subtitle: {
     fontSize: 13,
-    color: "#9D8C95",
     textAlign: "center",
-    lineHeight: 20,
+    color: "#9D8C95",
     marginBottom: 24,
-    paddingHorizontal: 8,
+    marginTop: 6,
   },
+
   inputBlock: {
     marginBottom: 16,
   },
+
   inputLabel: {
     fontSize: 14,
     fontWeight: "600",
     color: "#5E4D57",
-    marginBottom: 8,
-    marginLeft: 2,
+    marginBottom: 6,
   },
+
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
@@ -256,16 +298,19 @@ const styles = StyleSheet.create({
     borderColor: "#F4D5E2",
     borderRadius: 16,
     paddingHorizontal: 14,
-    height: 54,
+    height: 52,
   },
+
   input: {
     flex: 1,
     fontSize: 14,
     color: "#3F2F39",
   },
+
   eyeButton: {
     paddingLeft: 8,
   },
+
   saveButton: {
     backgroundColor: "#F8C9DA",
     paddingVertical: 14,
@@ -274,11 +319,13 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 10,
   },
+
   saveButtonText: {
-    fontSize: 15,
     fontWeight: "700",
     color: "#253046",
+    fontSize: 15,
   },
+
   cancelButton: {
     backgroundColor: "#FCECF3",
     paddingVertical: 14,
@@ -287,9 +334,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#F5C8D8",
   },
+
   cancelButtonText: {
-    fontSize: 15,
     fontWeight: "700",
     color: "#D94C8A",
+    fontSize: 15,
   },
 });

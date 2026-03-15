@@ -1,306 +1,374 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
+  ActivityIndicator,
 } from "react-native";
+
 import { LinearGradient } from "expo-linear-gradient";
-import PieChart from "../../components/PieChart";
-import SpendCard from "../../components/SpendCard";
-import { COLORS, RADIUS, SHADOW, SPACING } from "../../constants/theme";
-import { useTransactions } from "../../context/TransactionContext";
+
 import { useAuth } from "../../hooks/useAuth";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { getMonthlyBudget } from "../../services/budgetService";
+
+import PieChart from "../../components/PieChart";
 import ScreenWrapper from "../../components/ScreenWrapper";
 
-const PIE_COLORS = [
-  "#FF4FA3",
-  "#FF7BBE",
-  "#FFA7D7",
-  "#FFD1EA",
-  "#F78ACB",
-  "#E75480",
-  "#C71585",
-];
+const COLORS = ["#E48383", "#F2B50F", "#8E62D9", "#5AB98F", "#F1A356"];
 
-export default function DashboardScreen() {
-  const { fetchTransactions, months, getMonthlySummary } = useTransactions();
-  const { user, logout } = useAuth();
+export default function DashboardScreen({ navigation }) {
+  const { user } = useAuth();
+
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   const displayName = user?.name || user?.email?.split("@")[0] || "Buddy";
 
-  // Fetch from backend on mount
+  const year = new Date().getFullYear();
+  const month = new Date().getMonth() + 1;
+
   useEffect(() => {
-    fetchTransactions({ userId: user._id });
-  }, []);
+    if (user?._id) {
+      loadBudget();
+    }
+  }, [user]);
 
-  const currentMonth = months?.[0];
+  const loadBudget = async () => {
+    try {
+      const data = await getMonthlyBudget(user._id, year, month);
+      setSummary(data);
+    } catch (err) {
+      console.log("Dashboard budget error", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const summary = currentMonth ? getMonthlySummary(currentMonth) : null;
+  if (loading) {
+    return (
+      <ScreenWrapper>
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color="#FF4FA3" />
+        </View>
+      </ScreenWrapper>
+    );
+  }
 
-  const totalSpent = summary?.expense ?? 0;
-  const totalIncome = summary?.income ?? 0;
+  const totalSpent = summary?.spentAmount ?? 0;
+  const totalBudget = summary?.totalBudget ?? 0;
+  const remaining = summary?.remainingAmount ?? 0;
 
-  const remaining = totalIncome - totalSpent;
   const breakdown =
-    summary?.categories
-      ?.filter((c) => c.expense > 0)
-      ?.map((cat, index) => ({
-        label: cat.name,
-        value: cat.expense,
-        color: PIE_COLORS[index % PIE_COLORS.length],
-      })) || [];
+    summary?.categories?.map((cat, index) => ({
+      label: cat.name,
+      value: cat.amount,
+      color: COLORS[index % COLORS.length],
+    })) || [];
+
+  const isEmpty = totalBudget === 0 && breakdown.length === 0;
 
   return (
     <ScreenWrapper>
       <ScrollView
-        contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.container}
       >
-        {/* Header */}
+        {/* HEADER */}
+
         <View style={styles.header}>
-          <View>
-            <Text style={styles.hello}>Hi {user?.name || "User"} 💗</Text>
-            <Text style={styles.subtitle}>Here’s your month at a glance</Text>
-          </View>
-
-          <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
+          <Text style={styles.title}>Hi {displayName} 💗</Text>
+          <Text style={styles.subtitle}>Here’s your month at a glance</Text>
         </View>
 
-        {/* Monthly Spend Card */}
-        <SpendCard
-          title="Monthly Spend"
-          value={`$${totalSpent.toFixed(0)}`}
-          subtitle={`Remaining: $${remaining.toFixed(0)}`}
-          rightPill={summary?.monthTitle || "No Data"}
-        />
+        {/* EMPTY STATE */}
 
-        <View style={{ height: 16 }} />
-
-        {/* Small Summary Cards */}
-        <View style={styles.rowCards}>
-          <View style={[styles.smallCard, { flex: 1, marginRight: 10 }]}>
-            <Text style={styles.smallTitle}>Total Income</Text>
-            <Text style={styles.smallValue}>${totalIncome.toFixed(0)}</Text>
-            <Text style={styles.smallHint}>This month</Text>
-          </View>
-
-          <View style={[styles.smallCard, { flex: 1, marginLeft: 10 }]}>
-            <Text style={styles.smallTitle}>Transactions</Text>
-            <Text style={styles.smallValue}>
-              {summary?.transactions?.length || 0}
+        {isEmpty ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTitle}>No budget yet</Text>
+            <Text style={styles.emptyText}>
+              Set your monthly budget to start tracking spending.
             </Text>
-            <Text style={styles.smallHint}>This month</Text>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate("RemainingBudget")}
+              activeOpacity={0.9}
+            >
+              <LinearGradient
+                colors={["#FF4FA3", "#FF1F80"]}
+                style={styles.emptyButton}
+              >
+                <Text style={styles.buttonText}>Set Budget</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
-        </View>
+        ) : (
+          <>
+            {/* SUMMARY */}
 
-        <View style={{ height: 18 }} />
+            <View style={styles.summaryRow}>
+              <View style={styles.summaryCard}>
+                <Text style={styles.summaryTitle}>Budget</Text>
+                <Text style={styles.summaryValue}>${totalBudget}</Text>
+                <Text style={styles.summarySub}>This month</Text>
+              </View>
 
-        {/* Breakdown Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Spending Breakdown</Text>
-            <Text style={styles.sectionTag}>Monthly</Text>
-          </View>
-
-          {breakdown.length > 0 ? (
-            <View style={styles.breakdownRow}>
-              <PieChart
-                size={180}
-                strokeWidth={24}
-                data={breakdown}
-                centerTitle="Spent"
-                centerValue={`$${totalSpent.toFixed(0)}`}
-                subtitle="This month"
-              />
-
-              <View style={styles.legend}>
-                {breakdown.map((item) => (
-                  <View key={item.label} style={styles.legendRow}>
-                    <View
-                      style={[styles.dot, { backgroundColor: item.color }]}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.legendLabel}>{item.label}</Text>
-                    </View>
-                    <Text style={styles.legendValue}>
-                      ${item.value.toFixed(0)}
-                    </Text>
-                  </View>
-                ))}
+              <View style={styles.summaryCard}>
+                <Text style={styles.summaryTitle}>Remaining</Text>
+                <Text style={styles.summaryValue}>${remaining}</Text>
+                <Text style={styles.summarySub}>This month</Text>
               </View>
             </View>
-          ) : (
-            <Text style={styles.noData}>No spending data for this month.</Text>
-          )}
+
+            {/* PIE */}
+
+            <View style={styles.breakdownCard}>
+              <Text style={styles.breakdownTitle}>Expense Breakdown</Text>
+
+              {breakdown.length === 0 ? (
+                <View style={styles.noData}>
+                  <Text style={styles.noDataText}>
+                    No expenses recorded this month
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <PieChart
+                    data={breakdown}
+                    total={totalSpent}
+                    remaining={remaining}
+                  />
+
+                  <View style={styles.legend}>
+                    {breakdown.map((item) => {
+                      const percent = totalSpent
+                        ? ((item.value / totalSpent) * 100).toFixed(1)
+                        : 0;
+
+                      return (
+                        <View key={item.label} style={styles.legendRow}>
+                          <View
+                            style={[
+                              styles.dot,
+                              { backgroundColor: item.color },
+                            ]}
+                          />
+
+                          <Text style={styles.legendLabel}>{item.label}</Text>
+
+                          <Text style={styles.legendPercent}>{percent}%</Text>
+
+                          <Text style={styles.legendAmount}>
+                            ${item.value}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </>
+              )}
+            </View>
+          </>
+        )}
+
+        {/* BUTTONS */}
+
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            onPress={() => navigation.navigate("AddTransaction")}
+            activeOpacity={0.9}
+          >
+            <LinearGradient
+              colors={["#FF4FA3", "#FF1F80"]}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>+ Add Transaction</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            onPress={() => navigation.navigate("RemainingBudget")}
+            activeOpacity={0.9}
+          >
+            <LinearGradient
+              colors={["#FF6A8B", "#FF3D5F"]}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>◎ Set Budget</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
-
-        <View style={{ height: 18 }} />
-
-        {/* Tip Section */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Smart Tip 💡</Text>
-          <Text style={styles.tipText}>
-            Try setting a weekly limit for your top spending category. Small
-            caps create big savings over time ✨
-          </Text>
-        </View>
-
-        <View style={{ height: 30 }} />
       </ScrollView>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  bg: { flex: 1 },
   container: {
-    padding: SPACING.l,
-    paddingTop: 26,
+    padding: 20,
   },
-  header: { marginBottom: 16 },
-  hello: {
-    fontSize: 26,
-    fontWeight: "900",
-    color: COLORS.text,
+
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
+
+  header: {
+    marginBottom: 20,
+  },
+
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1F2937",
+  },
+
   subtitle: {
     marginTop: 4,
     fontSize: 13,
-    color: COLORS.muted,
+    color: "#6B7280",
   },
 
-  rowCards: {
-    flexDirection: "row",
-  },
-  smallCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.card,
-    padding: SPACING.m,
-    borderWidth: 1,
-    borderColor: "#F6CDE2",
-    ...SHADOW.card,
-  },
-  smallTitle: {
-    fontSize: 12,
-    color: COLORS.muted,
-    fontWeight: "700",
-  },
-  smallValue: {
-    marginTop: 6,
-    fontSize: 20,
-    fontWeight: "900",
-    color: COLORS.text,
-  },
-  smallHint: {
-    marginTop: 2,
-    fontSize: 12,
-    color: COLORS.primaryDark,
-    fontWeight: "700",
-  },
-
-  sectionCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS.card,
-    padding: SPACING.l,
-    borderWidth: 1,
-    borderColor: "#F6CDE2",
-    ...SHADOW.card,
-  },
-  sectionHeader: {
+  summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 20,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: COLORS.text,
+
+  summaryCard: {
+    flex: 1,
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#F6CDE2",
+    marginHorizontal: 4,
   },
-  sectionTag: {
-    fontSize: 12,
+
+  summaryTitle: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+
+  summaryValue: {
+    fontSize: 26,
     fontWeight: "800",
-    color: COLORS.primaryDark,
-    backgroundColor: "#FFE0F0",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
+    marginVertical: 4,
+  },
+
+  summarySub: {
+    color: "#EC4899",
+    fontWeight: "600",
+  },
+
+  breakdownCard: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 20,
     borderWidth: 1,
     borderColor: "#F6CDE2",
   },
 
-  breakdownRow: {
-    flexDirection: "row",
+  breakdownTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 10,
+  },
+
+  noData: {
     alignItems: "center",
+    paddingVertical: 30,
   },
+
+  noDataText: {
+    color: "#6B7280",
+    fontSize: 14,
+  },
+
   legend: {
-    flex: 1,
-    marginLeft: 14,
+    marginTop: 10,
   },
+
   legendRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 7,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F8E6F1",
+    paddingVertical: 6,
   },
+
   dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 999,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     marginRight: 10,
   },
+
   legendLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: COLORS.text,
+    flex: 1,
+    fontSize: 16,
   },
-  legendValue: {
-    fontSize: 13,
-    fontWeight: "900",
-    color: COLORS.text,
+
+  legendPercent: {
+    width: 70,
+    textAlign: "right",
+    color: "#6B7280",
   },
-  tipText: {
-    marginTop: 8,
-    fontSize: 13,
-    color: COLORS.muted,
-    lineHeight: 18,
+
+  legendAmount: {
+    width: 70,
+    textAlign: "right",
+    fontWeight: "600",
   },
-  noData: {
-    fontSize: 14,
-    color: COLORS.muted,
+
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 30,
   },
-  logoutBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: "#fff",
+
+  button: {
+    flex: 1,
+    paddingVertical: 16,
     borderRadius: 20,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+
+  buttonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+    textAlign: "center",
+  },
+
+  emptyContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 30,
+    alignItems: "center",
     borderWidth: 1,
     borderColor: "#F6CDE2",
   },
 
-  logoutText: {
-    fontWeight: "800",
-    color: "#E53935",
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 8,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
+
+  emptyText: {
+    fontSize: 14,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 20,
   },
-  logoutBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: "#fff",
+
+  emptyButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 40,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#F6CDE2",
-    alignSelf: "flex-start", // optional safety
   },
 });
